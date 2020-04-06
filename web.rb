@@ -39,6 +39,24 @@ post '/ephemeral_keys' do
   key.to_json
 end
 
+post '/create-payment-intent' do
+  content_type 'application/json'
+  data = JSON.parse(request.body.read)
+
+  # Create a PaymentIntent with the order amount and currency
+  payment_intent = Stripe::PaymentIntent.create(
+    amount: calculate_order_amount(data['items']),
+    currency: data['currency']
+  )
+
+  # Send publishable key and PaymentIntent details to client
+  {
+    publishableKey: ENV['STRIPE_PUBLISHABLE_KEY'],
+    clientSecret: payment_intent['client_secret'],
+    id: payment_intent['id']
+  }.to_json
+end
+
 def authenticate!
   # This code simulates "loading the Stripe customer for your current session".
   # Your own logic will likely look very different.
